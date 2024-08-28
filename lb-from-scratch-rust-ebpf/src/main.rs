@@ -75,9 +75,28 @@ fn try_lb_from_scratch_rust(ctx: XdpContext) -> Result<u32, ()> {
     unsafe {
         (*ipv4hdr_mut).check = ipv4_csum::ipv4_checksum_calc(&mut *ipv4hdr_mut).to_be();
     }
-    let src_addr = u32::from_be(unsafe { (*ipv4hdr_mut).src_addr });
-    let dst_addr = u32::from_be(unsafe { (*ipv4hdr_mut).dst_addr });
-    info!(&ctx, "SRC IP: {:i}, DST IP: {:i}", src_addr, dst_addr);
+    let ip_src_addr = u32::from_be(unsafe { (*ipv4hdr_mut).src_addr });
+    let ip_dst_addr = u32::from_be(unsafe { (*ipv4hdr_mut).dst_addr });
+    // let mac_src_addr =// Swap src and dst MAC addresses.
+    info!(&ctx, "SRC IP: {:i}, DST IP: {:i}", ip_src_addr, ip_dst_addr);
+    unsafe {
+        info!(
+            &ctx,
+            "eth addr {:x}:{:x}:{:x}:{:x}:{:x}:{:x} -> {:x}:{:x}:{:x}:{:x}:{:x}:{:x}",
+            (*ethhdr).src_addr[0],
+            (*ethhdr).src_addr[1],
+            (*ethhdr).src_addr[2],
+            (*ethhdr).src_addr[3],
+            (*ethhdr).src_addr[4],
+            (*ethhdr).src_addr[5],
+            (*ethhdr).dst_addr[0],
+            (*ethhdr).dst_addr[1],
+            (*ethhdr).dst_addr[2],
+            (*ethhdr).dst_addr[3],
+            (*ethhdr).dst_addr[4],
+            (*ethhdr).dst_addr[5],
+        );
+    }
     Ok(xdp_action::XDP_TX)
 }
 
