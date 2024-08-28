@@ -1,0 +1,3 @@
+[workspace]
+resolver = "2"
+members = ["xtask", "lb-from-scratch-rust", "lb-from-scratch-rust-common"]

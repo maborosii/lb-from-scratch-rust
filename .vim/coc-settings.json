@@ -1,0 +1,3 @@
+{
+  "rust-analyzer.linkedProjects": ["Cargo.toml", "lb-from-scratch-rust-ebpf/Cargo.toml"]
+}
