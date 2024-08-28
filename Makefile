@@ -16,11 +16,11 @@ build-app:
 
 .PHONY: docker-cp
 docker-cp:
-    docker cp ./target/x86_64-unknown-linux-musl/release/lb-from-scratch-rust lb:/tmp/
+	docker cp ./target/x86_64-unknown-linux-musl/release/lb-from-scratch-rust lb:/tmp/
 
 .PHONY: docker-exec
 docker-exec:
-    docker exec -it lb sh
+	docker exec -it lb sh
 
 # 清理构建生成的文件
 .PHONY: clean
