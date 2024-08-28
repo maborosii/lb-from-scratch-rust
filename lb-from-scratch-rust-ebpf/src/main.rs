@@ -77,7 +77,7 @@ fn try_lb_from_scratch_rust(ctx: XdpContext) -> Result<u32, ()> {
     }
     let src_addr = u32::from_be(unsafe { (*ipv4hdr_mut).src_addr });
     let dst_addr = u32::from_be(unsafe { (*ipv4hdr_mut).dst_addr });
-    info!(&ctx, "SRC IP: {:i}, DST IP: {}", src_addr, dst_addr);
+    info!(&ctx, "SRC IP: {:i}, DST IP: {:i}", src_addr, dst_addr);
     Ok(xdp_action::XDP_TX)
 }
 
