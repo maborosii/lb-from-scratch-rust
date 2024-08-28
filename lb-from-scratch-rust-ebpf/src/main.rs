@@ -38,6 +38,25 @@ fn try_lb_from_scratch_rust(ctx: XdpContext) -> Result<u32, ()> {
         }
     }
 
+    unsafe {
+        info!(
+            &ctx,
+            "before eth addr {:x}:{:x}:{:x}:{:x}:{:x}:{:x} -> {:x}:{:x}:{:x}:{:x}:{:x}:{:x}",
+            (*ethhdr).src_addr[0],
+            (*ethhdr).src_addr[1],
+            (*ethhdr).src_addr[2],
+            (*ethhdr).src_addr[3],
+            (*ethhdr).src_addr[4],
+            (*ethhdr).src_addr[5],
+            (*ethhdr).dst_addr[0],
+            (*ethhdr).dst_addr[1],
+            (*ethhdr).dst_addr[2],
+            (*ethhdr).dst_addr[3],
+            (*ethhdr).dst_addr[4],
+            (*ethhdr).dst_addr[5],
+        );
+    }
+
     // let ipv4hdr = ptr_at::<Ipv4Hdr>(&ctx, EthHdr::LEN)?;
     let ipv4hdr_mut = ptr_at_mut::<Ipv4Hdr>(&ctx, EthHdr::LEN)?;
     match unsafe { (*ipv4hdr_mut).proto } {
@@ -82,7 +101,7 @@ fn try_lb_from_scratch_rust(ctx: XdpContext) -> Result<u32, ()> {
     unsafe {
         info!(
             &ctx,
-            "eth addr {:x}:{:x}:{:x}:{:x}:{:x}:{:x} -> {:x}:{:x}:{:x}:{:x}:{:x}:{:x}",
+            "after eth addr {:x}:{:x}:{:x}:{:x}:{:x}:{:x} -> {:x}:{:x}:{:x}:{:x}:{:x}:{:x}",
             (*ethhdr).src_addr[0],
             (*ethhdr).src_addr[1],
             (*ethhdr).src_addr[2],
