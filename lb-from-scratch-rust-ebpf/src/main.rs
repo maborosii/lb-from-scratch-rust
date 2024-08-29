@@ -3,20 +3,16 @@
 mod utils;
 
 use aya_ebpf::{
-    bindings::xdp_action,
-    helpers::{bpf_csum_diff, bpf_ktime_get_ns},
-    macros::xdp,
-    programs::XdpContext,
+    bindings::xdp_action, helpers::bpf_ktime_get_ns, macros::xdp, programs::XdpContext,
 };
 use aya_log_ebpf::info;
-use core::mem;
 use core::net::Ipv4Addr;
 use lb_from_scratch_rust_common::ipv4_csum;
 use network_types::{
     eth::{EthHdr, EtherType},
     ip::{IpProto, Ipv4Hdr},
 };
-use utils::{ptr_at, ptr_at_mut};
+use utils::ptr_at_mut;
 
 // Converts a checksum into u16
 #[inline(always)]
@@ -38,14 +34,14 @@ pub fn lb_from_scratch_rust(ctx: XdpContext) -> u32 {
 }
 
 fn try_lb_from_scratch_rust(ctx: XdpContext) -> Result<u32, ()> {
-    // let ip_prefix = Ipv4Addr::new(172, 17, 0, 0);
     let client = Ipv4Addr::new(172, 17, 0, 2);
     let lb = Ipv4Addr::new(172, 17, 0, 3);
     let backend_1 = Ipv4Addr::new(172, 17, 0, 4);
     let backend_2 = Ipv4Addr::new(172, 17, 0, 5);
-    let ethhdr = ptr_at::<EthHdr>(&ctx, 0)?;
 
-    match unsafe { (*ethhdr).ether_type } {
+    let ethhdr_mut = ptr_at_mut::<EthHdr>(&ctx, 0)?;
+
+    match unsafe { (*ethhdr_mut).ether_type } {
         EtherType::Ipv4 => {}
         _ => {
             info!(&ctx, "above ether protocol is not ipv4, pass it");
@@ -57,22 +53,21 @@ fn try_lb_from_scratch_rust(ctx: XdpContext) -> Result<u32, ()> {
         info!(
             &ctx,
             "before eth addr {:x}:{:x}:{:x}:{:x}:{:x}:{:x} -> {:x}:{:x}:{:x}:{:x}:{:x}:{:x}",
-            (*ethhdr).src_addr[0],
-            (*ethhdr).src_addr[1],
-            (*ethhdr).src_addr[2],
-            (*ethhdr).src_addr[3],
-            (*ethhdr).src_addr[4],
-            (*ethhdr).src_addr[5],
-            (*ethhdr).dst_addr[0],
-            (*ethhdr).dst_addr[1],
-            (*ethhdr).dst_addr[2],
-            (*ethhdr).dst_addr[3],
-            (*ethhdr).dst_addr[4],
-            (*ethhdr).dst_addr[5],
+            (*ethhdr_mut).src_addr[0],
+            (*ethhdr_mut).src_addr[1],
+            (*ethhdr_mut).src_addr[2],
+            (*ethhdr_mut).src_addr[3],
+            (*ethhdr_mut).src_addr[4],
+            (*ethhdr_mut).src_addr[5],
+            (*ethhdr_mut).dst_addr[0],
+            (*ethhdr_mut).dst_addr[1],
+            (*ethhdr_mut).dst_addr[2],
+            (*ethhdr_mut).dst_addr[3],
+            (*ethhdr_mut).dst_addr[4],
+            (*ethhdr_mut).dst_addr[5],
         );
     }
 
-    // let ipv4hdr = ptr_at::<Ipv4Hdr>(&ctx, EthHdr::LEN)?;
     let ipv4hdr_mut = ptr_at_mut::<Ipv4Hdr>(&ctx, EthHdr::LEN)?;
     match unsafe { (*ipv4hdr_mut).proto } {
         IpProto::Tcp => {
@@ -83,20 +78,17 @@ fn try_lb_from_scratch_rust(ctx: XdpContext) -> Result<u32, ()> {
                 }
                 unsafe {
                     (*ipv4hdr_mut).set_dst_addr(be);
-                    // (*(ipv4hdr as *mut Ipv4Hdr)).dst_addr = be;
-                    (*(ethhdr as *mut EthHdr)).dst_addr[5] = be.octets()[3];
+                    (*ethhdr_mut).dst_addr[5] = be.octets()[3];
                 }
             } else {
                 unsafe {
                     (*ipv4hdr_mut).set_dst_addr(client);
-                    // (*(ipv4hdr as *mut Ipv4Hdr)).dst_addr = client;
-                    (*(ethhdr as *mut EthHdr)).dst_addr[5] = client.octets()[3];
+                    (*ethhdr_mut).dst_addr[5] = client.octets()[3];
                 }
             }
             unsafe {
                 (*ipv4hdr_mut).set_src_addr(lb);
-                // (*(ipv4hdr as *mut Ipv4Hdr)).src_addr = lb;
-                (*(ethhdr as *mut EthHdr)).src_addr[5] = lb.octets()[3];
+                (*ethhdr_mut).src_addr[5] = lb.octets()[3];
             }
         }
         _ => {
@@ -105,21 +97,9 @@ fn try_lb_from_scratch_rust(ctx: XdpContext) -> Result<u32, ()> {
         }
     }
 
-    // info!(&ctx, "received a packet");
     unsafe {
         (*ipv4hdr_mut).check = ipv4_csum::ipv4_checksum_calc(&mut *ipv4hdr_mut).to_be();
     }
-    // let full_cksum = unsafe {
-    //     bpf_csum_diff(
-    //         mem::MaybeUninit::zeroed().assume_init(),
-    //         0,
-    //         ipv4hdr_mut as *mut u32,
-    //         Ipv4Hdr::LEN as u32,
-    //         0,
-    //     )
-    // } as u64;
-
-    // unsafe { (*ipv4hdr_mut).check = csum_fold_helper(full_cksum) };
 
     let ip_src_addr = u32::from_be(unsafe { (*ipv4hdr_mut).src_addr });
     let ip_dst_addr = u32::from_be(unsafe { (*ipv4hdr_mut).dst_addr });
@@ -129,18 +109,18 @@ fn try_lb_from_scratch_rust(ctx: XdpContext) -> Result<u32, ()> {
         info!(
             &ctx,
             "after eth addr {:x}:{:x}:{:x}:{:x}:{:x}:{:x} -> {:x}:{:x}:{:x}:{:x}:{:x}:{:x}",
-            (*ethhdr).src_addr[0],
-            (*ethhdr).src_addr[1],
-            (*ethhdr).src_addr[2],
-            (*ethhdr).src_addr[3],
-            (*ethhdr).src_addr[4],
-            (*ethhdr).src_addr[5],
-            (*ethhdr).dst_addr[0],
-            (*ethhdr).dst_addr[1],
-            (*ethhdr).dst_addr[2],
-            (*ethhdr).dst_addr[3],
-            (*ethhdr).dst_addr[4],
-            (*ethhdr).dst_addr[5],
+            (*ethhdr_mut).src_addr[0],
+            (*ethhdr_mut).src_addr[1],
+            (*ethhdr_mut).src_addr[2],
+            (*ethhdr_mut).src_addr[3],
+            (*ethhdr_mut).src_addr[4],
+            (*ethhdr_mut).src_addr[5],
+            (*ethhdr_mut).dst_addr[0],
+            (*ethhdr_mut).dst_addr[1],
+            (*ethhdr_mut).dst_addr[2],
+            (*ethhdr_mut).dst_addr[3],
+            (*ethhdr_mut).dst_addr[4],
+            (*ethhdr_mut).dst_addr[5],
         );
     }
     Ok(xdp_action::XDP_PASS)
