@@ -47,7 +47,7 @@ RUN --mount=type=cache,target=/workspace/target/ \
     --release \
     --target=$(eval cat arch)-unknown-linux-musl
 RUN --mount=type=cache,target=/workspace/target/ \
-    cp /workspace/target/$(eval cat arch)-unknown-linux-musl/release/lb-from-scratch-rust /workspace/lb-from-scratch-rust
+    cp /workspace/target/$(eval cat arch)-unknown-linux-musl/release/lb-from-scratch-rust /workspace/app/lb-from-scratch-rust
 
 FROM alpine
 
@@ -55,6 +55,6 @@ WORKDIR /opt/app/
 
 ENV RUST_LOG="info"
 
-COPY --from=builder /workspace/lb-from-scratch-rust /opt/app/lb-from-scratch-rust
+COPY --from=builder /workspace/app/lb-from-scratch-rust /opt/app/lb-from-scratch-rust
 
 ENTRYPOINT ["/opt/app/lb-from-scratch-rust"]
