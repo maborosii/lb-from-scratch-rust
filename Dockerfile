@@ -53,6 +53,8 @@ FROM alpine
 
 WORKDIR /opt/app/
 
+ENV RUST_LOG="info"
+
 COPY --from=builder /workspace/lb-from-scratch-rust /opt/app/lb-from-scratch-rust
 
-ENTRYPOINT ["RUST_LOG=info","/opt/app/lb-from-scratch-rust"]
+ENTRYPOINT ["/opt/app/lb-from-scratch-rust"]
