@@ -11,7 +11,7 @@ use aya_ebpf::{
 use aya_log_ebpf::info;
 use core::mem;
 use core::net::Ipv4Addr;
-// use lb_from_scratch_rust_common::ipv4_c÷sum;
+use lb_from_scratch_rust_common::ipv4_csum;
 use network_types::{
     eth::{EthHdr, EtherType},
     ip::{IpProto, Ipv4Hdr},
@@ -106,20 +106,20 @@ fn try_lb_from_scratch_rust(ctx: XdpContext) -> Result<u32, ()> {
     }
 
     // info!(&ctx, "received a packet");
-    // unsafe {
-    //     (*ipv4hdr_mut).check = ipv4_csum::ipv4_checksum_calc(&mut *ipv4hdr_mut).to_be();
-    // }
-    let full_cksum = unsafe {
-        bpf_csum_diff(
-            mem::MaybeUninit::zeroed().assume_init(),
-            0,
-            ipv4hdr_mut as *mut u32,
-            Ipv4Hdr::LEN as u32,
-            0,
-        )
-    } as u64;
+    unsafe {
+        (*ipv4hdr_mut).check = ipv4_csum::ipv4_checksum_calc(&mut *ipv4hdr_mut).to_be();
+    }
+    // let full_cksum = unsafe {
+    //     bpf_csum_diff(
+    //         mem::MaybeUninit::zeroed().assume_init(),
+    //         0,
+    //         ipv4hdr_mut as *mut u32,
+    //         Ipv4Hdr::LEN as u32,
+    //         0,
+    //     )
+    // } as u64;
 
-    unsafe { (*ipv4hdr_mut).check = csum_fold_helper(full_cksum) };
+    // unsafe { (*ipv4hdr_mut).check = csum_fold_helper(full_cksum) };
 
     let ip_src_addr = u32::from_be(unsafe { (*ipv4hdr_mut).src_addr });
     let ip_dst_addr = u32::from_be(unsafe { (*ipv4hdr_mut).dst_addr });
