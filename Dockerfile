@@ -35,7 +35,7 @@ COPY . .
 # We need to tell bpf-linker where it can find LLVM's shared library file.
 # Ref: https://github.com/aya-rs/rustc-llvm-proxy/blob/cbcb3c6/src/lib.rs#L48
 ENV LD_LIBRARY_PATH="/usr/lib/llvm-16/lib"
-
+RUN mkdir app
 RUN --mount=type=cache,target=/workspace/target/ \
     --mount=type=cache,target=/root/.cargo/registry \
     cargo xtask build-ebpf --release
