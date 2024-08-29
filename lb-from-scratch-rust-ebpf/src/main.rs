@@ -123,8 +123,8 @@ fn try_lb_from_scratch_rust(ctx: XdpContext) -> Result<u32, ()> {
             (*ethhdr_mut).dst_addr[5],
         );
     }
-    Ok(xdp_action::XDP_PASS)
-    // Ok(xdp_action::XDP_TX)
+    // Ok(xdp_action::XDP_PASS)
+    Ok(xdp_action::XDP_TX)
 }
 
 #[panic_handler]
