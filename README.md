@@ -1,5 +1,5 @@
 # lb-from-scratch-rust
-librice/lb-from-scratch RUST implement
+lizrice/lb-from-scratch RUST implement
 
 # Prerequisites
 Docker Image: `library/maborosiii/lb-from-scratch-rust`
