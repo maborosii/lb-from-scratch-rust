@@ -4,8 +4,11 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - 'README.md'
+    paths:
+      - 'lb-from-scratch-rust-common/**'
+      - 'lb-from-scratch-rust-ebpf/**'
+      - 'lb-from-scratch-rust/**'
+      - 'xtask/**'
 
 jobs:
   build:
